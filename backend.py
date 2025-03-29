@@ -1,8 +1,29 @@
 import matplotlib.pyplot as plt
 from collections import defaultdict
+import math
+import datetime # Added for potential future use or logging, not strictly required by prompt
+
+# --- Prime Number Generation Helper ---
+def is_prime(num):
+    """Checks if a number is prime."""
+    if num < 2:
+        return False
+    for i in range(2, int(math.sqrt(num)) + 1):
+        if num % i == 0:
+            return False
+    return True
+
+def generate_primes(count):
+    """Generates the first 'count' prime numbers."""
+    primes = []
+    num = 2
+    while len(primes) < count:
+        if is_prime(num):
+            primes.append(num)
+        num += 1
+    return primes
 
 # --- Hardcoded Symptom-Disease Matrix ---
-# Represents whether a symptom is typically present (1) or absent (0) for a disease.
 disease_symptom_data = {
     "Common Cold": {
         "Fever": 0, "Cough": 1, "Fatigue": 1, "Sore throat": 1,
@@ -23,8 +44,6 @@ disease_symptom_data = {
         "Fever": 1, "Cough": 1, "Fatigue": 1, "Sore throat": 0,
         "Shortness of breath": 1, "Runny nose": 0, "Body aches": 0,
         "Headache": 0, "Chills": 1, "Loss of taste/smell": 0
-        # Note: Tuberculosis often has other specific symptoms like night sweats, weight loss, not listed here.
-        # This matrix is based *only* on the provided table.
     },
     "Pneumonia": {
         "Fever": 1, "Cough": 1, "Fatigue": 1, "Sore throat": 0,
@@ -33,176 +52,223 @@ disease_symptom_data = {
     }
 }
 
-# Extract all unique symptoms from the data
-all_symptoms = set()
-for symptoms in disease_symptom_data.values():
-    all_symptoms.update(symptoms.keys())
-all_symptoms = sorted(list(all_symptoms)) # Keep a consistent order
+# --- Generate Mappings ---
+# 1. Get unique symptoms and sort
+all_symptoms = sorted(list(set(
+    symptom for symptoms in disease_symptom_data.values() for symptom in symptoms.keys()
+)))
 
-all_diseases = sorted(list(disease_symptom_data.keys()))
+# 2. Assign primes
+required_primes = len(all_symptoms)
+primes_list = generate_primes(required_primes)
+symptom_to_prime = {symptom: primes_list[i] for i, symptom in enumerate(all_symptoms)}
+prime_to_symptom = {prime: symptom for symptom, prime in symptom_to_prime.items()}
 
-# --- Functions Adapted from the First Script ---
+# 3. Calculate SQF for diseases
+disease_to_sqf = {}
+sqf_to_disease = defaultdict(list)
+for disease, symptoms in disease_symptom_data.items():
+    sqf_integer = 1
+    for symptom, present in symptoms.items():
+        if present == 1:
+            prime = symptom_to_prime.get(symptom)
+            if prime:
+                 sqf_integer *= prime
+    if sqf_integer > 0: # Only map if it has some representation
+        disease_to_sqf[disease] = sqf_integer
+        sqf_to_disease[sqf_integer].append(disease)
 
-def calculate_disease_matches(user_symptoms, disease_data):
-    """
-    Counts how many user symptoms match each disease in the data.
+# --- Functions (Calculation, Printing, Visualization - Mostly unchanged) ---
 
-    Args:
-        user_symptoms: A list of validated symptoms provided by the user.
-        disease_data: The dictionary holding disease-symptom relationships.
-
-    Returns:
-        A dictionary mapping disease names to their match count.
-    """
+def calculate_disease_matches_numeric(user_symptom_primes, disease_sqf_map):
+    """Counts matches based on prime factors."""
     match_counts = defaultdict(int)
-    for disease, symptoms_present in disease_data.items():
-        count = 0
-        for user_symptom in user_symptoms:
-            if symptoms_present.get(user_symptom, 0) == 1: # Check if symptom is present (1)
-                count += 1
-        if count > 0: # Only include diseases with at least one match
-             match_counts[disease] = count
-    return dict(match_counts) # Convert back to regular dict
+    if not user_symptom_primes:
+        return {}
+    for disease, disease_sqf in disease_sqf_map.items():
+        count = sum(1 for prime in user_symptom_primes if disease_sqf % prime == 0)
+        if count > 0:
+            match_counts[disease] = count
+    return dict(match_counts)
 
-def print_symptom_disease_graph(user_symptoms, matched_diseases):
-    """
-    Prints the structure of a bipartite graph where edges exist
-    if the symptom is associated with the disease in the data.
+def print_graph_structure_numeric(user_primes, matched_sqfs, prime_map, sqf_map):
+    """Prints the numeric graph structure with string labels."""
+    print("\n--- Bipartite Graph Structure (Prime Factors) ---")
+    print("Input Symptom Primes (Left):")
+    for p in sorted(user_primes): # Sort for consistent output
+        print(f"  {prime_map.get(p, 'Unknown')}: {p}")
 
-    Args:
-        user_symptoms: List of strings representing the input symptoms (left nodes).
-        matched_diseases: List of strings representing potential diseases (right nodes).
-    """
-    print("\n--- Bipartite Graph Structure (Symptoms vs. Diseases) ---")
-    print("Input Symptoms (Left):", user_symptoms)
-    print("Matched Diseases (Right):", matched_diseases)
-    print("Edges (Symptom -> Disease):")
+    print("Matched Disease SQF Integers (Right):")
+    for n in sorted(matched_sqfs): # Sort for consistent output
+        disease_names = ", ".join(sqf_map.get(n, ['Unknown']))
+        print(f"  {disease_names}: {n}")
 
-    # Print the edges based on symptom presence
-    for symptom in user_symptoms:
-        for disease in matched_diseases:
-            # Check if the symptom is listed as present (1) for the disease
-            if disease_symptom_data.get(disease, {}).get(symptom, 0) == 1:
-                print(f"  ({symptom} -> {disease})")
+    print("Edges (Prime Factor -> SQF Integer):")
+    for p in sorted(user_primes): # Sort for consistent output
+        symptom_name = prime_map.get(p, 'Unknown Prime')
+        for n in sorted(matched_sqfs): # Sort for consistent output
+            if n % p == 0:
+                disease_names = ", ".join(sqf_map.get(n, ['Unknown Disease(s)']))
+                print(f"  ({symptom_name} [{p}] -> {disease_names} [{n}])")
     print("--- End of Graph Structure ---")
 
-
-def visualize_symptom_disease_graph(user_symptoms, matched_diseases):
-    """
-    Visualizes a bipartite graph (using matplotlib) where edges exist
-    if the symptom is associated with the disease.
-
-    Args:
-        user_symptoms: List of strings for the left column (symptoms).
-        matched_diseases: List of strings for the right column (diseases).
-    """
-    if not user_symptoms or not matched_diseases:
-        print("\nCannot visualize graph: No symptoms or matched diseases.")
+def visualize_graph_numeric(user_primes, matched_sqfs, prime_map, sqf_map):
+    """Visualizes the numeric bipartite graph with string labels."""
+    if not user_primes or not matched_sqfs:
+        print("\nCannot visualize graph: No valid symptom primes or matched disease SQFs.")
         return
 
-    plt.figure(figsize=(10, max(len(user_symptoms), len(matched_diseases)) * 0.8)) # Adjust height
+    plot_primes = sorted(list(set(user_primes)))
+    plot_sqfs = sorted(list(set(matched_sqfs)))
 
-    # x-coordinates for each side
+    plt.figure(figsize=(12, max(len(plot_primes), len(plot_sqfs)) * 0.9))
     x_left, x_right = 0, 1
+    y_coords_left = {prime: i for i, prime in enumerate(plot_primes)}
+    y_coords_right = {sqf: i for i, sqf in enumerate(plot_sqfs)}
 
-    # y-coordinates
-    y_coords_left = range(len(user_symptoms))
-    y_coords_right = range(len(matched_diseases))
+    for prime, i in y_coords_left.items():
+        label = f"{prime_map.get(prime, '?')} ({prime})"
+        plt.scatter(x_left, i, color='blue', s=150, zorder=2)
+        plt.text(x_left - 0.05, i, label, ha='right', va='center', fontsize=9)
 
-    # Plot the user_symptoms on the left
-    for i, symptom in enumerate(user_symptoms):
-        plt.scatter(x_left, y_coords_left[i], color='blue', s=150, zorder=2)
-        plt.text(x_left - 0.05, y_coords_left[i], symptom,
-                 ha='right', va='center', fontsize=9)
+    for sqf, j in y_coords_right.items():
+        disease_names = ", ".join(sqf_map.get(sqf, ['?']))
+        label = f"{disease_names} ({sqf})"
+        plt.scatter(x_right, j, color='red', s=150, zorder=2)
+        plt.text(x_right + 0.05, j, label, ha='left', va='center', fontsize=9)
 
-    # Plot the matched_diseases on the right
-    for j, disease in enumerate(matched_diseases):
-        plt.scatter(x_right, y_coords_right[j], color='red', s=150, zorder=2)
-        plt.text(x_right + 0.05, y_coords_right[j], disease,
-                 ha='left', va='center', fontsize=9)
+    for p, i in y_coords_left.items():
+        for n, j in y_coords_right.items():
+            if n % p == 0:
+                plt.plot([x_left, x_right], [i, j], color='gray', linewidth=1.0, zorder=1)
 
-    # Draw edges based on symptom presence in the disease data
-    for i, symptom in enumerate(user_symptoms):
-        for j, disease in enumerate(matched_diseases):
-             # Check if the symptom is listed as present (1) for the disease
-            if disease_symptom_data.get(disease, {}).get(symptom, 0) == 1:
-                plt.plot([x_left, x_right],
-                         [y_coords_left[i], y_coords_right[j]],
-                         color='gray', linewidth=1.0, zorder=1) # zorder=1 puts lines behind nodes
-
-    # Formatting
     plt.xticks([])
     plt.yticks([])
-    plt.xlim(-0.8, 1.8) # Adjust limits for text visibility
-    plt.ylim(-1, max(len(y_coords_left), len(y_coords_right))) # Adjust y limits
-    plt.title("Symptom-Disease Bipartite Graph")
+    plt.xlim(-1, 2)
+    plt.ylim(-1, max(len(y_coords_left), len(y_coords_right)))
+    plt.title("Symptom-Disease Bipartite Graph (Prime Factor Mapping)")
     plt.tight_layout()
     plt.show()
 
-def symptom_disease_demo():
-    """Handles user input, calculates matches, prints, and visualizes."""
-    print("--- Symptom Checker ---")
-    print("Available symptoms:", ", ".join(all_symptoms))
-    try:
-        input_str = input("Enter your symptoms (comma-separated, case-sensitive): ")
-        # Clean input: strip whitespace and handle potential empty strings
-        raw_symptoms = [s.strip() for s in input_str.split(',') if s.strip()]
+def print_mappings(prime_map, sqf_map):
+    """Prints the complete mapping legends."""
+    print("\n" + "="*40)
+    print("          LEGEND / HASH MAP")
+    print("="*40)
 
-        if not raw_symptoms:
-             print("No symptoms entered.")
+    print("\n--- Symptom Primes ---")
+    # Sort by prime number for readability
+    for prime, symptom in sorted(prime_map.items()):
+        print(f"  {prime:<5} -> {symptom}")
+
+    print("\n--- Disease Square-Free Integers (SQF) ---")
+    # Sort by SQF number for readability
+    for sqf, diseases in sorted(sqf_map.items()):
+        # Join if multiple diseases share an SQF
+        print(f"  {sqf:<7} -> {', '.join(diseases)}")
+    print("="*40 + "\n") # Add extra newline for spacing before input prompt
+
+
+# --- Main Demo Function ---
+def symptom_disease_demo_numeric():
+    """Handles prime input, calculates matches, prints results, vectors, graph, and legend."""
+    print("--- Symptom Checker (Prime Number Input) ---")
+
+    # --- Print the Legend at the Beginning ---
+    print_mappings(prime_to_symptom, sqf_to_disease)
+
+    # Variables to store final vectors
+    final_input_vector = []
+    final_output_vector = []
+
+    try:
+        # Now prompt for input after showing the legend
+        input_str = input("Enter symptom prime numbers (comma-separated): ")
+        raw_inputs = [s.strip() for s in input_str.split(',') if s.strip()]
+
+        if not raw_inputs:
+             print("No input provided.")
              return
 
-        # Validate symptoms
-        user_symptoms = []
-        invalid_symptoms = []
-        for symptom in raw_symptoms:
-            if symptom in all_symptoms:
-                user_symptoms.append(symptom)
-            else:
-                invalid_symptoms.append(symptom)
+        # Validate and convert to primes
+        user_symptom_primes = []
+        invalid_inputs = []
+        valid_symptoms_found = []
 
-        if invalid_symptoms:
-            print(f"\nWarning: The following symptoms are not recognized: {', '.join(invalid_symptoms)}")
+        for val_str in raw_inputs:
+            try:
+                prime_candidate = int(val_str)
+                if prime_candidate in prime_to_symptom:
+                    if prime_candidate not in user_symptom_primes: # Ensure uniqueness
+                        user_symptom_primes.append(prime_candidate)
+                        valid_symptoms_found.append(prime_to_symptom[prime_candidate])
+                else:
+                    invalid_inputs.append(f"{prime_candidate} (Not a valid symptom prime)")
+            except ValueError:
+                invalid_inputs.append(f"'{val_str}' (Not an integer)")
 
-        if not user_symptoms:
-            print("No valid symptoms provided. Cannot proceed.")
-            return
+        user_symptom_primes.sort() # Keep input vector sorted
 
-        print(f"\nProcessing valid symptoms: {', '.join(user_symptoms)}")
+        if invalid_inputs:
+            print(f"\nWarning: The following inputs are invalid: {', '.join(invalid_inputs)}")
+
+        if not user_symptom_primes:
+            print("No valid symptom primes provided. Cannot proceed.")
+            return # Exit if no valid input after warnings
+
+        print(f"\nProcessing valid primes: {user_symptom_primes}")
+        print(f"Corresponding symptoms: {', '.join(sorted(valid_symptoms_found))}")
+        final_input_vector = list(user_symptom_primes) # Store for final output
 
         # Calculate disease matches
-        disease_matches = calculate_disease_matches(user_symptoms, disease_symptom_data)
+        disease_matches = calculate_disease_matches_numeric(user_symptom_primes, disease_to_sqf)
 
         if not disease_matches:
-            print("\nNo diseases found matching the provided symptoms based on the available data.")
-            return
+            print("\nNo diseases found whose SQF representation contains any of the input symptom primes.")
+            final_output_vector = [] # Store empty list
+        else:
+            # Prioritize results
+            prioritized_diseases = sorted(
+                disease_matches.items(),
+                key=lambda item: (-item[1], item[0])
+            )
 
-        # Create prioritized list (priority queue simulation)
-        # Sort by count (descending), then alphabetically by disease name (ascending) for ties
-        prioritized_diseases = sorted(
-            disease_matches.items(),
-            key=lambda item: (-item[1], item[0]) # Sort by count DESC, then name ASC
-        )
+            print("\n--- Potential Diseases (Prioritized by Symptom Prime Factor Count) ---")
+            for disease, count in prioritized_diseases:
+                sqf = disease_to_sqf.get(disease, 'N/A')
+                print(f"- {disease} (SQF: {sqf}, Matches {count} of your symptom primes)")
+            print("---")
 
-        print("\n--- Potential Diseases (Prioritized by Symptom Match Count) ---")
-        for disease, count in prioritized_diseases:
-            print(f"- {disease} (Matches {count} of your symptoms)")
-        print("---")
+            # Prepare unique SQFs for graphing and final output vector
+            matched_disease_sqfs = sorted(list(set(
+                disease_to_sqf[name] for name, count in prioritized_diseases
+            )))
+            final_output_vector = list(matched_disease_sqfs) # Store for final output
 
-        # Prepare lists for graphing
-        matched_disease_names = [disease for disease, count in prioritized_diseases]
+            # Print the graph structure
+            print_graph_structure_numeric(user_symptom_primes, matched_disease_sqfs, prime_to_symptom, sqf_to_disease)
 
-        # Print the graph structure to console
-        print_symptom_disease_graph(user_symptoms, matched_disease_names)
+            # Visualize the graph
+            print("\nGenerating visualization...")
+            visualize_graph_numeric(user_symptom_primes, matched_disease_sqfs, prime_to_symptom, sqf_to_disease)
 
-        # Visualize the bipartite graph
-        print("\nGenerating visualization...")
-        visualize_symptom_disease_graph(user_symptoms, matched_disease_names)
+        # --- Output Vectors (Printed before the end) ---
+        print("\n" + "="*40)
+        print("        INPUT/OUTPUT VECTORS")
+        print("="*40)
+        print(f"Input Vector (Symptom Primes): {final_input_vector}")
+        print(f"Output Vector (Matched Disease SQFs): {final_output_vector}")
+        print("="*40)
 
-    except Exception as e: # Catch potential errors during processing/plotting
+
+    except Exception as e:
         print(f"\nAn unexpected error occurred: {e}")
-        print("Please ensure symptoms are entered correctly.")
+        # import traceback
+        # traceback.print_exc() # Uncomment for detailed debugging
+        print("Please check input format.")
 
-# Run the demo
+    # --- Legend is no longer printed here ---
+
+# --- Run the Demo ---
 if __name__ == "__main__":
-    symptom_disease_demo()
+    symptom_disease_demo_numeric()
