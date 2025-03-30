@@ -52,9 +52,10 @@ The graph below shows how symptom primes (blue) connect to disease SQFs (red) ba
 ![Bipartite Graph](./files/readme_demo.png)
 
 ## Future Enhancements
-- **Database Integration:** Replace hardcoded symptom-disease mapping with a dynamic database.
+- **Database :** Replace hardcoded symptom-disease mapping with a real database from a reputable source such as an academic research institution or a medical professional.
 - **Web Interface:** Create an interactive visualization on a web platform.
-- **Machine Learning Integration:** Use ML models alongside prime factorization for enhanced prediction.
+- **Hardware Integration:** Use the compute and memory non-intensive elements of this algorithm and implement into low-cost wearable devices.
+
 
 ## Contributors
 <a href="https://github.com/sauravtiwari1"><img src="https://avatars.githubusercontent.com/u/110325751?v=4?s=50" alt="sauravtiwari1" style="border-radius:50%" width="70" height="70"></a>
