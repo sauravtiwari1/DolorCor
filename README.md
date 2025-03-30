@@ -11,7 +11,7 @@ This project introduces an elegant and efficient approach to symptom-based disea
 - **Perfect Factorization Matching:** If an edge exists between a symptom and a disease, it means the disease's SQF integer is perfectly divisible by the symptom’s prime number.
 - **Scalability:** Despite its conceptual depth, the computational complexity remains highly efficient.
 - **Graphical Beauty:** The bipartite graph structure **naturally emerges** from number theory, where diseases (right-side nodes) are **composite numbers** made from prime factor symptoms (left-side nodes).
-[Read More](./files/theory_hackathon.pdf)
+- Read More [Here](./files/theory_hackathon.pdf) and [Here](./files/hackathon_dolorcor.pdf)
 
 ## Features
 - **Prime Number-Based Mapping:** Each symptom is assigned a unique prime number.
