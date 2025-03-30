@@ -3,6 +3,8 @@
 
 ## Symptom-Disease Prime Mapping
 
+## [Devpost](https://devpost.com/software/dolorcor)
+
 ## Overview
 This project introduces an elegant and efficient approach to symptom-based disease prediction using **prime factorization** and **bipartite graph representation**. Each symptom is assigned a unique **prime number**, and each disease is represented as a **square-free integer (SQF)**—the product of its associated symptom primes. This allows for **perfect divisibility-based matching** and a visually intuitive graph structure where edges naturally form based on prime factorization.
 
