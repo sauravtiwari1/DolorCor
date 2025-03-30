@@ -1,12 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Analysis Results</title>
+    <title>DolorCor | Analysis Results</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate result cards sequentially
+            const cards = document.querySelectorAll('.result-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = (index * 0.15) + 's';
+            });
+            
+            // Add pulse effect to visualization
+            const visualImg = document.querySelector('.visualization-section img');
+            if (visualImg) {
+                visualImg.addEventListener('load', function() {
+                    this.style.animation = 'fadeIn 1s ease-in-out';
+                });
+            }
+            
+            // Back button bounce effect
+            const backBtn = document.querySelector('.back-btn');
+            if (backBtn) {
+                backBtn.addEventListener('mouseover', function() {
+                    this.style.animation = 'pulse 0.5s ease';
+                });
+                backBtn.addEventListener('animationend', function() {
+                    this.style.animation = '';
+                });
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">
-        <h1>Analysis Results</h1>
+        <h1>Analysis Results <span class="medical-icon">📊</span></h1>
         
         <div class="symptoms-section">
             <h3>Selected Symptoms:</h3>

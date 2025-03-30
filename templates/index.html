@@ -1,12 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Symptom Checker</title>
+    <title>DolorCor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add bounce effect to symptom items
+            const symptoms = document.querySelectorAll('.symptom-item');
+            symptoms.forEach((symptom, index) => {
+                symptom.style.animationDelay = (index * 0.05) + 's';
+                symptom.style.animation = 'bounceIn 0.6s ease forwards';
+                
+                // Make entire symptom item clickable
+                symptom.addEventListener('click', function(e) {
+                    // Only if not clicking directly on the checkbox (to avoid double toggle)
+                    if (e.target.type !== 'checkbox') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                    }
+                });
+            });
+
+            // Add loading animation when form submits
+            const form = document.querySelector('form');
+            const submitBtn = document.querySelector('.analyze-btn');
+            
+            if (form) {
+                form.addEventListener('submit', function() {
+                    submitBtn.innerHTML = "Analyzing... <span class='loading-dot'>.</span><span class='loading-dot'>.</span><span class='loading-dot'>.</span>";
+                    submitBtn.disabled = true;
+                    
+                    document.body.style.opacity = 0.7;
+                    
+                    const loadingSpinner = document.createElement('div');
+                    loadingSpinner.className = 'loading-spinner';
+                    submitBtn.parentNode.insertBefore(loadingSpinner, submitBtn.nextSibling);
+                    loadingSpinner.style.display = 'block';
+                });
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">
-        <h1>Symptom Checker</h1>
+        <h1>DolorCor<span class="medical-icon">🏥</span></h1>
         
         <div class="disclaimer">
             <h3>DISCLAIMER</h3>
