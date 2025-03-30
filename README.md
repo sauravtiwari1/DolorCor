@@ -9,7 +9,7 @@ This project introduces an elegant and efficient approach to symptom-based disea
 ## Why is this Elegant?
 - **Mathematical Purity:** The system leverages prime numbers, ensuring that every symptom-disease relationship is uniquely and deterministically encoded.
 - **Perfect Factorization Matching:** If an edge exists between a symptom and a disease, it means the disease's SQF integer is perfectly divisible by the symptom’s prime number.
-- **Scalability:** Despite its conceptual depth, the matching complexity is only **O(M × D)**, making it highly efficient.
+- **Scalability:** Despite its conceptual depth, the computational complexity remains highly efficient.
 - **Graphical Beauty:** The bipartite graph structure **naturally emerges** from number theory, where diseases (right-side nodes) are **composite numbers** made from prime factor symptoms (left-side nodes).
 - [Read the detailed explanation (PDF)](./files/hackathon_dolorcor.pdf)
 
