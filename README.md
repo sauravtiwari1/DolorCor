@@ -47,7 +47,6 @@ If the user inputs symptoms with primes `{3, 7}`, the algorithm finds:
 - **COVID-19 (2310) ✅** (divisible by 3, 7)
 
 
-
 ## Visualization Example
 The graph below shows how symptom primes (blue) connect to disease SQFs (red) based on divisibility:
 
@@ -57,4 +56,9 @@ The graph below shows how symptom primes (blue) connect to disease SQFs (red) ba
 - **Database Integration:** Replace hardcoded symptom-disease mapping with a dynamic database.
 - **Web Interface:** Create an interactive visualization on a web platform.
 - **Machine Learning Integration:** Use ML models alongside prime factorization for enhanced prediction.
+
+## Contributors
+<a href="https://github.com/sauravtiwari1"><img src="https://avatars.githubusercontent.com/u/110325751?v=4?s=50" alt="sauravtiwari1" style="border-radius:50%" width="70" height="70"></a>
+<a href="https://github.com/qyire"><img src="https://avatars.githubusercontent.com/u/110325751?v=4?s=50" alt="chan" style="border-radius:50%" width="70" height="70"></a>
+<a href="https://github.com/AryaSapkal"><img src="https://avatars.githubusercontent.com/u/40864924?v=4?s=50" alt="Arya" style="border-radius:50%" width="70" height="70">
 
