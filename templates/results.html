@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Analysis Results</h1>
+        
+        <div class="symptoms-section">
+            <h3>Selected Symptoms:</h3>
+            <ul>
+                {% for symptom in symptoms %}
+                <li>{{ symptom }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="results-section">
+            <h3>Possible Conditions:</h3>
+            {% for result in results %}
+            <div class="result-card">
+                <h4>{{ result.name }}</h4>
+                <p class="match-count">Matching Symptoms: {{ result.count }}</p>
+                <p class="action-plan">{{ result.action }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if plot_url %}
+        <div class="visualization-section">
+            <h3>Symptom-Condition Connections</h3>
+            <img src="data:image/png;base64,{{ plot_url }}" alt="Symptom-Disease Graph">
+        </div>
+        {% endif %}
+
+        <a href="{{ url_for('index') }}" class="back-btn">Check New Symptoms</a>
+    </div>
+</body>
+</html>
